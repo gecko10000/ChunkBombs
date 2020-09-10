@@ -1,0 +1,14 @@
+prefix: "&3[&bChunkBombs&3]"
+helpText:
+- "&bChunkBombs Help"
+- "&e/cb give [player]"
+- "&e/cb reload"
+
+
+reload: "%prefix% &aConfigs reloaded!"
+successfulGive: "%prefix% &aGave &e%player% &aa &6&lChunk Bomb&a."
+successfulGiveOtherPlayer: "%prefix% &e%player% &agave you a &6&lChunk Bomb&a."
+invalidPlayer: "%prefix% &e%player% &cis not online!"
+specifyPlayer: "%prefix% &cSpecify a player!"
+noPlacePerms: "%prefix% &cYou don't have permission to place this!"
+noPerms: "%prefix% &cYou don't have permission!"

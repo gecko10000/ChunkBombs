@@ -1,0 +1,20 @@
+name: ChunkBombs
+main: io.github.levtey.ChunkBombs.ChunkBombs
+version: 0.0.1
+author: levtey
+api-version: 1.15
+commands:
+  chunkbombs:
+    aliases: [cb, cbombs]
+    description: Main plugin command
+    usage: /<command> help
+permissions:
+  chunkbombs.give:
+    description: Allows you to give a chunk bomb.
+    default: op
+  chunkbombs.reload:
+    description: Reloads the plugin.
+    default: op
+  chunkbombs.use:
+    description: Allows you to use a chunk bomb.
+    default: true
