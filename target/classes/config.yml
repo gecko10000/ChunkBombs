@@ -1,2 +1,30 @@
 item:
   material: TNT
+  name: "&6&lChunk Bomb"
+  # Set lore: [] to remove lore
+  lore:
+  - "&4Clears everything except ores,"
+  - "&4spawners, and bedrock from where"
+  - "&4you place it and down."
+  enchanted: true
+
+# Anything over 5 will make water flow weirdly
+layerDelay: 5
+
+confirmation:
+  enabled: true
+  inventoryName: "&cClear from y %y% and down?"
+  # 1 - 6
+  size: 3
+
+blacklist:
+- BEDROCK
+- IRON_ORE
+- GOLD_ORE
+- DIAMOND_ORE
+- EMERALD_ORE
+- END_GATEWAY
+- END_PORTAL
+- END_PORTAL_FRAME
+- END_PORTAL_GATEWAY
+- SPAWNER
