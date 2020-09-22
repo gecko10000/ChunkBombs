@@ -9,7 +9,7 @@ item:
   enchanted: true
 
 # Anything over 5 will make water flow weirdly
-layerDelay: 5
+layerDelay: 1
 
 confirmation:
   enabled: true
@@ -28,3 +28,6 @@ blacklist:
 - END_PORTAL_FRAME
 - END_PORTAL_GATEWAY
 - SPAWNER
+
+# Only works if Towny is enabled
+inTownsOnly: true

@@ -10,10 +10,12 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -35,6 +37,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.palmergames.bukkit.towny.TownyAPI;
+
+import net.coreprotect.CoreProtect;
+import net.coreprotect.CoreProtectAPI;
+
 public class ChunkBombs extends JavaPlugin implements Listener {
 	FileConfiguration config;
 	File langFile;
@@ -49,6 +56,8 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 	List<String> blacklist = new ArrayList<>();
 	int layerDelay;
 	String prefix;
+	boolean coreProtectEnabled;
+	CoreProtectAPI coreProtect;
 	
 	@Override
 	public void onEnable() {
@@ -68,6 +77,10 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		blacklist = config.getStringList("blacklist");
 		layerDelay = config.getInt("layerDelay");
 		prefix = lang.getString("prefix");
+		coreProtectEnabled = Bukkit.getPluginManager().isPluginEnabled("CoreProtect");
+		if (coreProtectEnabled) {
+			coreProtect = ((CoreProtect) Bukkit.getServer().getPluginManager().getPlugin("CoreProtect")).getAPI();
+		}
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -125,26 +138,56 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		return true;
 	}
 	
+	public List<String> onTabComplete(final CommandSender sender, final Command cmd, final String label,
+			final String[] args) {
+		List<String> results = new ArrayList<>();
+		if (args.length == 1) {
+			if (sender.hasPermission("chunkbombs.give") && "give".startsWith(args[0])) {
+				results.add("give");
+			}
+			if (sender.hasPermission("chunkbombs.reload") && "reload".startsWith(args[0])) {
+				results.add("reload");
+			}
+		} else if (args.length == 2 && args[0].equalsIgnoreCase("give") && sender.hasPermission("chunkbombs.give")) {
+			for (Player player : Bukkit.getOnlinePlayers()) {
+				if (player.getName().startsWith(args[1])) {
+					results.add(player.getName());
+				}
+			}
+		}
+		return results;
+	}
+	
 	@EventHandler (ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlace(BlockPlaceEvent evt) {
 		ItemStack itemInHand = evt.getItemInHand();
 		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase())) && itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.STRING)) {
-			if (config.getBoolean("confirmation.enabled")) {
-				evt.getBlock().setType(Material.AIR);
-				Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(), config.getInt("confirmation.size") * 9, ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + evt.getBlock().getY())));
-				for (int i = 0; i < config.getInt("confirmation.size"); i++) {
-					for (int j = 0; j < 4; j++) {
-						confirmInventory.setItem(i * 9 + j, confirmItem);
+			if (evt.getPlayer().hasPermission("chunkbombs.use")) {
+				if (!Bukkit.getPluginManager().isPluginEnabled("Towny") || !config.getBoolean("inTownsOnly") || (TownyAPI.getInstance().getTownName(evt.getBlock().getLocation()) != null)) {
+					if (config.getBoolean("confirmation.enabled")) {
+						evt.getBlock().setType(Material.AIR);
+						Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(), config.getInt("confirmation.size") * 9, ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + evt.getBlock().getY())));
+						for (int i = 0; i < config.getInt("confirmation.size"); i++) {
+							for (int j = 0; j < 4; j++) {
+								confirmInventory.setItem(i * 9 + j, confirmItem);
+							}
+							confirmInventory.setItem(i * 9 + 4, fillerItem);
+							for (int j = 5; j < 9; j++) {
+								confirmInventory.setItem(i * 9 + j, cancelItem);
+							}
+						}
+						confirmationInventories.put(evt.getPlayer(), evt.getBlock().getLocation());
+						evt.getPlayer().openInventory(confirmInventory);
+					} else {
+						clearChunk(evt.getBlock().getLocation(), evt.getPlayer());
 					}
-					confirmInventory.setItem(i * 9 + 4, fillerItem);
-					for (int j = 5; j < 9; j++) {
-						confirmInventory.setItem(i * 9 + j, cancelItem);
-					}
+				} else {
+					evt.setCancelled(true);
+					evt.getPlayer().sendMessage(parseLang(lang.getString("cannotUseHere"), null));
 				}
-				confirmationInventories.put(evt.getPlayer(), evt.getBlock().getLocation());
-				evt.getPlayer().openInventory(confirmInventory);
 			} else {
-				clearChunk(evt.getBlock().getLocation());
+				evt.setCancelled(true);
+				evt.getPlayer().sendMessage(parseLang(lang.getString("noUsePerms"), null));
 			}
 		}
 	}
@@ -154,7 +197,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		if (evt.getCurrentItem() != null && !evt.getClickedInventory().equals(evt.getWhoClicked().getInventory()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getWhoClicked()).getBlockY())))) {
 			evt.setCancelled(true);
 			if (evt.getCurrentItem().isSimilar(confirmItem)) {
-				clearChunk(confirmationInventories.get((Player)evt.getWhoClicked()));
+				clearChunk(confirmationInventories.get((Player)evt.getWhoClicked()), (Player) evt.getWhoClicked());
 				confirmedPlayers.add((Player) evt.getWhoClicked());
 				evt.getWhoClicked().closeInventory();
 				confirmationInventories.remove(evt.getWhoClicked());
@@ -167,14 +210,15 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 	
 	@EventHandler
 	public void onClose(InventoryCloseEvent evt) {
-		if (!evt.getInventory().equals(evt.getPlayer().getInventory()) && !confirmedPlayers.contains((Player) evt.getPlayer()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getPlayer()).getBlockY())))) {
+		if (!evt.getPlayer().getGameMode().equals(GameMode.CREATIVE) && !evt.getInventory().equals(evt.getPlayer().getInventory()) && !confirmedPlayers.contains((Player) evt.getPlayer()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getPlayer()).getBlockY())))) {
 			evt.getPlayer().getInventory().addItem(createChunkBomb());
 		} else if (confirmedPlayers.contains((Player) evt.getPlayer())) {
 			confirmedPlayers.remove((Player) evt.getPlayer());
 		}
 	}
 	
-	public void clearChunk(final Location location) {
+	public void clearChunk(final Location location, Player player) {
+		final String playerName = player.getName();
 		final int finalX = location.getChunk().getX() * 16;
 		final int finalZ = location.getChunk().getZ() * 16;
 		for (int y = location.getBlockY(); y >= 0; y--) {
@@ -183,8 +227,12 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 				public void run() {
 					for (int x = finalX; x < finalX + 16; x++) {
 						for (int z = finalZ; z < finalZ + 16; z++) {
-							if (!blacklist.contains(location.getWorld().getBlockAt(x, finalY, z).getType().toString())) {
-								location.getWorld().getBlockAt(x, finalY, z).setType(Material.AIR);
+							Block blockToRemove = location.getWorld().getBlockAt(x, finalY, z);
+							if (!blacklist.contains(blockToRemove.getType().toString())) {
+								if (coreProtectEnabled) {
+									coreProtect.logRemoval(playerName + "#chunkbomb", blockToRemove.getLocation(), blockToRemove.getType(), blockToRemove.getBlockData());
+								}
+								blockToRemove.setType(Material.AIR);
 							}
 						}
 					}

@@ -23,7 +23,15 @@
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
 		</repository>
-	</repositories>
+		<repository>
+	    	<id>jitpack.io</id>
+	    	<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>playpro.com</id>
+			<url>https://maven.playpro.com/</url>
+		</repository>
+  	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
@@ -40,6 +48,17 @@
 				on the version -->
 			<type>jar</type>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+		    <groupId>com.github.TownyAdvanced</groupId>
+		    <artifactId>Towny</artifactId>
+		    <version>0.96.2.0</version>
+		    <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.coreprotect</groupId>
+			<artifactId>coreprotect</artifactId>
+			<version>19.2</version>
 		</dependency>
 	</dependencies>
 </project>

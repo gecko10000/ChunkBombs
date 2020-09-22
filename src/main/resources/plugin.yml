@@ -3,6 +3,7 @@ main: io.github.levtey.ChunkBombs.ChunkBombs
 version: 0.0.1
 author: levtey
 api-version: 1.15
+softdepend: [Towny, CoreProtect]
 commands:
   chunkbombs:
     aliases: [cb, cbombs]
