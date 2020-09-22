@@ -27,6 +27,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -44,6 +45,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 	ItemStack fillerItem = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
 	List<Inventory> openConfirmations = new ArrayList<>();
 	Map<Player, Location> confirmationInventories = new HashMap<>();
+	List<Player> confirmedPlayers = new ArrayList<>();
 	List<String> blacklist = new ArrayList<>();
 	int layerDelay;
 	String prefix;
@@ -65,7 +67,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		fillerItem.setItemMeta(fillerItemMeta);
 		blacklist = config.getStringList("blacklist");
 		layerDelay = config.getInt("layerDelay");
-		prefix = config.getString("prefix");
+		prefix = lang.getString("prefix");
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -108,7 +110,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 						createLangFile();
 						blacklist = config.getStringList("blacklist");
 						layerDelay = config.getInt("layerDelay");
-						prefix = config.getString("prefix");
+						prefix = lang.getString("prefix");
 						sender.sendMessage(parseLang(lang.getString("reload"), null));
 					} else {
 						sender.sendMessage(parseLang(lang.getString("noPerms"), null));
@@ -128,7 +130,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		ItemStack itemInHand = evt.getItemInHand();
 		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase())) && itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.STRING)) {
 			if (config.getBoolean("confirmation.enabled")) {
-				evt.setCancelled(true);
+				evt.getBlock().setType(Material.AIR);
 				Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(), config.getInt("confirmation.size") * 9, ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + evt.getBlock().getY())));
 				for (int i = 0; i < config.getInt("confirmation.size"); i++) {
 					for (int j = 0; j < 4; j++) {
@@ -153,12 +155,22 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			evt.setCancelled(true);
 			if (evt.getCurrentItem().isSimilar(confirmItem)) {
 				clearChunk(confirmationInventories.get((Player)evt.getWhoClicked()));
+				confirmedPlayers.add((Player) evt.getWhoClicked());
 				evt.getWhoClicked().closeInventory();
 				confirmationInventories.remove(evt.getWhoClicked());
 			} else if (evt.getCurrentItem().isSimilar(cancelItem)) {
 				evt.getWhoClicked().closeInventory();
 				confirmationInventories.remove(evt.getWhoClicked());
 			}
+		}
+	}
+	
+	@EventHandler
+	public void onClose(InventoryCloseEvent evt) {
+		if (!evt.getInventory().equals(evt.getPlayer().getInventory()) && !confirmedPlayers.contains((Player) evt.getPlayer()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getPlayer()).getBlockY())))) {
+			evt.getPlayer().getInventory().addItem(createChunkBomb());
+		} else if (confirmedPlayers.contains((Player) evt.getPlayer())) {
+			confirmedPlayers.remove((Player) evt.getPlayer());
 		}
 	}
 	
