@@ -58,7 +58,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 	String prefix;
 	boolean coreProtectEnabled;
 	CoreProtectAPI coreProtect;
-	
+
 	@Override
 	public void onEnable() {
 		this.saveDefaultConfig();
@@ -82,7 +82,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			coreProtect = ((CoreProtect) Bukkit.getServer().getPluginManager().getPlugin("CoreProtect")).getAPI();
 		}
 	}
-	
+
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("chunkbombs")) {
 			if (args.length > 0) {
@@ -94,14 +94,15 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 								targetPlayer.getInventory().addItem(createChunkBomb());
 								sender.sendMessage(parseLang(lang.getString("successfulGive"), args[1]));
 								if (!sender.getName().equals(targetPlayer.getName())) {
-									targetPlayer.sendMessage(parseLang(lang.getString("successfulGiveOtherPlayer"), sender instanceof Player ? sender.getName() : "Console"));
+									targetPlayer.sendMessage(parseLang(lang.getString("successfulGiveOtherPlayer"),
+											sender instanceof Player ? sender.getName() : "Console"));
 								}
 							} else {
 								sender.sendMessage(parseLang(lang.getString("invalidPlayer"), args[1]));
 							}
 						} else {
 							if (sender instanceof Player) {
-								((Player)sender).getInventory().addItem(createChunkBomb());
+								((Player) sender).getInventory().addItem(createChunkBomb());
 								sender.sendMessage(parseLang(lang.getString("successfulGive"), sender.getName()));
 							} else {
 								sender.sendMessage(parseLang(lang.getString("cannotGiveToConsole"), sender.getName()));
@@ -137,7 +138,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		}
 		return true;
 	}
-	
+
 	public List<String> onTabComplete(final CommandSender sender, final Command cmd, final String label,
 			final String[] args) {
 		List<String> results = new ArrayList<>();
@@ -157,16 +158,22 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		}
 		return results;
 	}
-	
-	@EventHandler (ignoreCancelled = true, priority = EventPriority.HIGHEST)
+
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onPlace(BlockPlaceEvent evt) {
 		ItemStack itemInHand = evt.getItemInHand();
-		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase())) && itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.STRING)) {
+		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase()))
+				&& itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.STRING)) {
 			if (evt.getPlayer().hasPermission("chunkbombs.use")) {
-				if (!Bukkit.getPluginManager().isPluginEnabled("Towny") || !config.getBoolean("inTownsOnly") || (TownyAPI.getInstance().getTownName(evt.getBlock().getLocation()) != null)) {
+				if (!Bukkit.getPluginManager().isPluginEnabled("Towny") || !config.getBoolean("inTownsOnly")
+						|| (TownyAPI.getInstance().getTownName(evt.getBlock().getLocation()) != null)) {
 					if (config.getBoolean("confirmation.enabled")) {
 						evt.getBlock().setType(Material.AIR);
-						Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(), config.getInt("confirmation.size") * 9, ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + evt.getBlock().getY())));
+						Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(),
+								config.getInt("confirmation.size") * 9,
+								ChatColor.translateAlternateColorCodes('&',
+										config.getString("confirmation.inventoryName").replaceAll("%y%",
+												"" + evt.getBlock().getY())));
 						for (int i = 0; i < config.getInt("confirmation.size"); i++) {
 							for (int j = 0; j < 4; j++) {
 								confirmInventory.setItem(i * 9 + j, confirmItem);
@@ -191,13 +198,18 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
-	@EventHandler (ignoreCancelled = true)
+
+	@EventHandler(ignoreCancelled = true)
 	public void onClick(InventoryClickEvent evt) {
-		if (evt.getCurrentItem() != null && !evt.getClickedInventory().equals(evt.getWhoClicked().getInventory()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getWhoClicked()).getBlockY())))) {
+		if (evt.getView().getTitle()
+				.equals(ChatColor.translateAlternateColorCodes('&',
+						config.getString("confirmation.inventoryName").replaceAll("%y%",
+								"" + (confirmationInventories.containsKey((Player) evt.getWhoClicked()) ? confirmationInventories.get((Player) evt.getWhoClicked()).getBlockY() : null))))
+				&& evt.getCurrentItem() != null
+				&& !evt.getClickedInventory().equals(evt.getWhoClicked().getInventory())) {
 			evt.setCancelled(true);
 			if (evt.getCurrentItem().isSimilar(confirmItem)) {
-				clearChunk(confirmationInventories.get((Player)evt.getWhoClicked()), (Player) evt.getWhoClicked());
+				clearChunk(confirmationInventories.get((Player) evt.getWhoClicked()), (Player) evt.getWhoClicked());
 				confirmedPlayers.add((Player) evt.getWhoClicked());
 				evt.getWhoClicked().closeInventory();
 				confirmationInventories.remove(evt.getWhoClicked());
@@ -207,16 +219,22 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
+
 	@EventHandler
 	public void onClose(InventoryCloseEvent evt) {
-		if (!evt.getPlayer().getGameMode().equals(GameMode.CREATIVE) && !evt.getInventory().equals(evt.getPlayer().getInventory()) && !confirmedPlayers.contains((Player) evt.getPlayer()) && evt.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', config.getString("confirmation.inventoryName").replaceAll("%y%", "" + confirmationInventories.get((Player)evt.getPlayer()).getBlockY())))) {
+		if (evt.getView().getTitle()
+				.equals(ChatColor.translateAlternateColorCodes('&',
+						config.getString("confirmation.inventoryName").replaceAll("%y%",
+								"" + (confirmationInventories.containsKey((Player) evt.getPlayer()) ? confirmationInventories.get((Player) evt.getPlayer()).getBlockY() : null))))
+				&& !evt.getPlayer().getGameMode().equals(GameMode.CREATIVE)
+				&& !evt.getInventory().equals(evt.getPlayer().getInventory())
+				&& !confirmedPlayers.contains((Player) evt.getPlayer())) {
 			evt.getPlayer().getInventory().addItem(createChunkBomb());
 		} else if (confirmedPlayers.contains((Player) evt.getPlayer())) {
 			confirmedPlayers.remove((Player) evt.getPlayer());
 		}
 	}
-	
+
 	public void clearChunk(final Location location, Player player) {
 		final String playerName = player.getName();
 		final int finalX = location.getChunk().getX() * 16;
@@ -230,18 +248,21 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 							Block blockToRemove = location.getWorld().getBlockAt(x, finalY, z);
 							if (!blacklist.contains(blockToRemove.getType().toString())) {
 								if (coreProtectEnabled) {
-									coreProtect.logRemoval(playerName + "#chunkbomb", blockToRemove.getLocation(), blockToRemove.getType(), blockToRemove.getBlockData());
+									coreProtect.logRemoval(playerName + "#chunkbomb", blockToRemove.getLocation(),
+											blockToRemove.getType(), blockToRemove.getBlockData());
 								}
 								blockToRemove.setType(Material.AIR);
 							}
 						}
 					}
-					location.getWorld().playSound(new Location(location.getWorld(), location.getX(), finalY, location.getZ()), Sound.ENTITY_GENERIC_EXPLODE, 1f, 1f);
+					location.getWorld().playSound(
+							new Location(location.getWorld(), location.getX(), finalY, location.getZ()),
+							Sound.ENTITY_GENERIC_EXPLODE, 1f, 1f);
 				}
 			}, (location.getBlockY() - y) * layerDelay);
 		}
 	}
-	
+
 	public ItemStack createChunkBomb() {
 		ItemStack chunkBomb = new ItemStack(Material.valueOf(config.getString("item.material")));
 		ItemMeta chunkBombMeta = chunkBomb.getItemMeta();
@@ -259,11 +280,12 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		chunkBomb.setItemMeta(chunkBombMeta);
 		return chunkBomb;
 	}
-	
+
 	public String parseLang(String input, String playerName) {
-		return ChatColor.translateAlternateColorCodes('&', input.replaceAll("%prefix%", prefix).replaceAll("%player%", playerName));
+		return ChatColor.translateAlternateColorCodes('&',
+				input.replaceAll("%prefix%", prefix).replaceAll("%player%", playerName));
 	}
-	
+
 	public void createLangFile() {
 		langFile = new File(getDataFolder(), "lang.yml");
 		if (!langFile.exists()) {

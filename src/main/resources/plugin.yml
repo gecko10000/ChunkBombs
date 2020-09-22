@@ -1,6 +1,6 @@
 name: ChunkBombs
 main: io.github.levtey.ChunkBombs.ChunkBombs
-version: 0.0.1
+version: 1.1.0
 author: levtey
 api-version: 1.15
 softdepend: [Towny, CoreProtect]
