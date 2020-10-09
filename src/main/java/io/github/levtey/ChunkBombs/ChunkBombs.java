@@ -91,7 +91,10 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 						if (args.length > 1) {
 							Player targetPlayer = Bukkit.getPlayer(args[1]);
 							if (targetPlayer != null) {
-								targetPlayer.getInventory().addItem(createChunkBomb());
+								Map<Integer, ItemStack> extra = targetPlayer.getInventory().addItem(createChunkBomb());
+								if (!extra.isEmpty()) {
+									targetPlayer.getWorld().dropItemNaturally(targetPlayer.getLocation(), extra.get(0));
+								}
 								sender.sendMessage(parseLang(lang.getString("successfulGive"), args[1]));
 								if (!sender.getName().equals(targetPlayer.getName())) {
 									targetPlayer.sendMessage(parseLang(lang.getString("successfulGiveOtherPlayer"),
@@ -102,7 +105,10 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 							}
 						} else {
 							if (sender instanceof Player) {
-								((Player) sender).getInventory().addItem(createChunkBomb());
+								Map<Integer, ItemStack> extra = ((Player) sender).getInventory().addItem(createChunkBomb());
+								if (!extra.isEmpty()) {
+									((Player) sender).getWorld().dropItemNaturally(((Player) sender).getLocation(), extra.get(0));
+								}
 								sender.sendMessage(parseLang(lang.getString("successfulGive"), sender.getName()));
 							} else {
 								sender.sendMessage(parseLang(lang.getString("cannotGiveToConsole"), sender.getName()));
