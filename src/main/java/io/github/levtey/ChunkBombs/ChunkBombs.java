@@ -9,14 +9,12 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -143,26 +141,6 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			sender.sendMessage(parseLang(helpLine, sender.getName()));
 		}
 		return true;
-	}
-
-	public List<String> onTabComplete(final CommandSender sender, final Command cmd, final String label,
-			final String[] args) {
-		List<String> results = new ArrayList<>();
-		if (args.length == 1) {
-			if (sender.hasPermission("chunkbombs.give") && "give".startsWith(args[0])) {
-				results.add("give");
-			}
-			if (sender.hasPermission("chunkbombs.reload") && "reload".startsWith(args[0])) {
-				results.add("reload");
-			}
-		} else if (args.length == 2 && args[0].equalsIgnoreCase("give") && sender.hasPermission("chunkbombs.give")) {
-			for (Player player : Bukkit.getOnlinePlayers()) {
-				if (player.getName().startsWith(args[1])) {
-					results.add(player.getName());
-				}
-			}
-		}
-		return results;
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
