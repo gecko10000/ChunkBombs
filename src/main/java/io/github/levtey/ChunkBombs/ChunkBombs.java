@@ -147,12 +147,12 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 	public void onPlace(BlockPlaceEvent evt) {
 		ItemStack itemInHand = evt.getItemInHand();
 		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase()))
-				&& itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.STRING)) {
+				&& itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.BYTE)) {
+			evt.setCancelled(true);
 			if (evt.getPlayer().hasPermission("chunkbombs.use")) {
 				if (!Bukkit.getPluginManager().isPluginEnabled("Towny") || !config.getBoolean("inTownsOnly")
 						|| (TownyAPI.getInstance().getTownName(evt.getBlock().getLocation()) != null)) {
 					if (config.getBoolean("confirmation.enabled")) {
-						evt.getBlock().setType(Material.AIR);
 						Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(),
 								config.getInt("confirmation.size") * 9,
 								ChatColor.translateAlternateColorCodes('&',
@@ -173,11 +173,9 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 						clearChunk(evt.getBlock().getLocation(), evt.getPlayer());
 					}
 				} else {
-					evt.setCancelled(true);
 					evt.getPlayer().sendMessage(parseLang(lang.getString("cannotUseHere"), null));
 				}
 			} else {
-				evt.setCancelled(true);
 				evt.getPlayer().sendMessage(parseLang(lang.getString("noUsePerms"), null));
 			}
 		}
@@ -223,7 +221,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		final String playerName = player.getName();
 		final int finalX = location.getChunk().getX() * 16;
 		final int finalZ = location.getChunk().getZ() * 16;
-		for (int y = location.getBlockY(); y >= 0; y--) {
+		for (int y = location.getBlockY(); y >= location.getWorld().getMinHeight(); y--) {
 			final int finalY = y;
 			Bukkit.getScheduler().runTaskLater(this, new Runnable() {
 				public void run() {
@@ -260,7 +258,7 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 			chunkBombMeta.addEnchant(Enchantment.DURABILITY, 1, true);
 			chunkBombMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
-		chunkBombMeta.getPersistentDataContainer().set(chunkBombKey, PersistentDataType.STRING, "");
+		chunkBombMeta.getPersistentDataContainer().set(chunkBombKey, PersistentDataType.BYTE, (byte) 0);
 		chunkBomb.setItemMeta(chunkBombMeta);
 		return chunkBomb;
 	}

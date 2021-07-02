@@ -34,17 +34,9 @@
   	</repositories>
 	<dependencies>
 		<dependency>
-			<groupId>org.bukkit</groupId>
-			<artifactId>bukkit</artifactId>
-			<version>1.15.2-R0.1-SNAPSHOT</version><!--change this value depending 
-				on the version or use LATEST -->
-			<type>jar</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.15.2-R0.1-SNAPSHOT</version><!--change this value depending 
+			<version>1.17-R0.1-SNAPSHOT</version><!--change this value depending 
 				on the version -->
 			<type>jar</type>
 			<scope>provided</scope>
@@ -52,13 +44,13 @@
 		<dependency>
 		    <groupId>com.github.TownyAdvanced</groupId>
 		    <artifactId>Towny</artifactId>
-		    <version>0.96.2.0</version>
+		    <version>0.97.0.0</version>
 		    <scope>provided</scope>
 		</dependency>
         <dependency>
         	<groupId>net.coreprotect</groupId>
         	<artifactId>coreprotect</artifactId>
-        	<version>19.2</version>
+        	<version>19.5</version>
         </dependency>
 	</dependencies>
 </project>
