@@ -2,3 +2,5 @@
 *.class
 *.lst
 *.properties
+*.class
+*.properties
