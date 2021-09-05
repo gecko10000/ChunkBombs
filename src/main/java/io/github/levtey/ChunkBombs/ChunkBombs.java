@@ -149,10 +149,10 @@ public class ChunkBombs extends JavaPlugin implements Listener {
 		if (itemInHand.getType().equals(Material.valueOf(config.getString("item.material").toUpperCase()))
 				&& itemInHand.getItemMeta().getPersistentDataContainer().has(chunkBombKey, PersistentDataType.BYTE)) {
 			evt.setCancelled(true);
-			itemInHand.setAmount(itemInHand.getAmount() - 1);
 			if (evt.getPlayer().hasPermission("chunkbombs.use")) {
 				if (!Bukkit.getPluginManager().isPluginEnabled("Towny") || !config.getBoolean("inTownsOnly")
 						|| (TownyAPI.getInstance().getTownName(evt.getBlock().getLocation()) != null)) {
+					itemInHand.setAmount(itemInHand.getAmount() - 1);
 					if (config.getBoolean("confirmation.enabled")) {
 						Inventory confirmInventory = Bukkit.createInventory(evt.getPlayer(),
 								config.getInt("confirmation.size") * 9,
